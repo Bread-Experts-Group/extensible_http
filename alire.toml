@@ -1,0 +1,13 @@
+name = "extensible_http"
+description = "Simple and extensible HTTP library"
+version = "0.1.0-dev"
+
+authors = ["Miko R. Elbrecht"]
+maintainers = ["Miko R. Elbrecht <pmt.mailservice@gmail.com>"]
+maintainers-logins = ["ATPStorages"]
+licenses = "Apache-2.0 WITH LLVM-exception"
+website = "https://javart.zip/p/extensible-http"
+tags = ["http", "https", "server", "client", "ssl", "tls"]
+
+[[depends-on]]
+gnat = "^14.2.1"
