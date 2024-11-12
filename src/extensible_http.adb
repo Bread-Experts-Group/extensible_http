@@ -51,8 +51,8 @@ package body Extensible_HTTP is
          String'Write (Stream, ':' & Element (E) & CRLF);
       end loop;
       String'Write (Stream, CRLF);
-      if Item.Message_Body /= null then
-         HTTP_11_Message_Body'Write (Stream, Item.Message_Body.all);
+      if not Item.Message_Body.Is_Empty then
+         String'Write (Stream, Item.Message_Body.Element);
       end if;
    end Write_HTTP_11_Message_Body;
 
@@ -74,7 +74,8 @@ package body Extensible_HTTP is
             declare
                Read_Token : constant Token :=
                  Token (CRLF_Tag & Read_String_From_Stream (Stream, ":"));
-               Read_Content : String := Read_String_From_Stream (Stream, CRLF);
+               Read_Content : constant String :=
+                 Read_String_From_Stream (Stream, CRLF);
             begin
                Item.Fields.Include (Read_Token, Read_Content);
             end;
@@ -82,7 +83,27 @@ package body Extensible_HTTP is
             exit;
          end if;
       end loop;
-      Item.Message_Body := new HTTP_11_Message_Body'("a");
+      if Item.Fields.Contains ("Transfer-Encoding") then
+         raise Program_Error with "TE!!";
+      elsif Item.Fields.Contains ("Content-Length") then
+         declare
+            Content_Length : Natural :=
+              Natural'Value (Item.Fields.Element ("Content-Length"));
+            Message_Body : Unbounded_String;
+         begin
+            loop
+               exit when Content_Length = 0;
+               declare
+                  Chunked : String (1 .. Natural'Min (Content_Length, 8_128));
+               begin
+                  String'Read (Stream, Chunked);
+                  Message_Body.Append (Chunked);
+                  Content_Length := @ - Chunked'Length;
+               end;
+            end loop;
+            Item.Message_Body.Replace_Element (Message_Body.To_String);
+         end;
+      end if;
    end Read_HTTP_11_Message_Body;
 
    ----------------------
@@ -95,7 +116,7 @@ package body Extensible_HTTP is
       Item   : HTTP_11_Request_Message)
    is
       RequestLine : constant String :=
-        Item.Method'Image & ' ' & Item.Target.all & " HTTP/1.1";
+        Item.Method'Image & ' ' & Item.Target.Element & " HTTP/1.1";
    begin
       String'Write (Stream, RequestLine);
       Write_HTTP_11_Message_Body (Stream, Item);
@@ -114,9 +135,7 @@ package body Extensible_HTTP is
    begin
       Item.Method :=
         HTTP_11_Method_Types'Value (Read_String_From_Stream (Stream, " "));
-      pragma Warnings (Off, "useless assignment");
-      Item.Target := new String'(Read_String_From_Stream (Stream, " "));
-      pragma Warnings (On, "useless assignment");
+      Item.Target.Replace_Element (Read_String_From_Stream (Stream, " "));
       String'Read (Stream, discard);
       Read_HTTP_11_Message_Body (Stream, Item);
    end Read_HTTP_11_Request_Message;
@@ -133,8 +152,8 @@ package body Extensible_HTTP is
       StatusLine : constant String := "HTTP/1.1 " & Item.Status'Image & ' ';
    begin
       String'Write (Stream, StatusLine);
-      if Item.Reason /= null then
-         String'Write (Stream, Item.Reason.all);
+      if not Item.Reason.Is_Empty then
+         String'Write (Stream, Item.Reason.Element);
       end if;
       Write_HTTP_11_Message_Body (Stream, Item);
    end Write_HTTP_11_Response_Message;

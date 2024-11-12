@@ -1,4 +1,5 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Containers.Indefinite_Holders;
 with Ada.Strings.Text_Buffers;
 
 with Ada.Streams; use Ada.Streams;
@@ -54,11 +55,7 @@ package Extensible_HTTP is
       --  Defined as "OWS", "RWS", "BWS" (Optional, Required, Bad) White Space
    type White_Space is new Character range ' ' .. ASCII.HT;
 
-   type String_Access is access constant String;
-   type String_Access_Optional is access constant String;
-
-   type HTTP_11_Message_Body is new String;
-   type HTTP_11_Message_Body_Access is access constant HTTP_11_Message_Body;
+   package String_Holders is new Ada.Containers.Indefinite_Holders (String);
 
    package Field_Hashed_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (Key_Type => Token, Element_Type => String);
@@ -67,7 +64,7 @@ package Extensible_HTTP is
    --  HTTP/1.1 HTTP-message
    type HTTP_11_Message is abstract tagged record
       Fields       : Field_Hashed_Maps.Map;
-      Message_Body : HTTP_11_Message_Body_Access;
+      Message_Body : String_Holders.Holder := String_Holders.Empty_Holder;
    end record;
 
    procedure Write_HTTP_11_Message_Body
@@ -82,7 +79,7 @@ package Extensible_HTTP is
    --  @field Target The request target for this request. TODO accompany forms
    type HTTP_11_Request_Message is new HTTP_11_Message with record
       Method : HTTP_11_Method_Types;
-      Target : String_Access;
+      Target : String_Holders.Holder;
    end record;
 
    --  https://datatracker.ietf.org/doc/html/rfc9112#name-status-line
@@ -102,7 +99,7 @@ package Extensible_HTTP is
    --  By default, this is null.
    type HTTP_11_Response_Message is new HTTP_11_Message with record
       Status : HTTP_11_Status_Code;
-      Reason : String_Access_Optional := null;
+      Reason : String_Holders.Holder := String_Holders.Empty_Holder;
    end record;
 
 private
