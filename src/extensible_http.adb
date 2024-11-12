@@ -2,6 +2,7 @@ with Ada.Strings.Unbounded;
 use Ada.Strings.Unbounded;
 
 with Ada.Integer_Text_IO;
+with Ada.Text_IO;
 
 package body Extensible_HTTP is
 
@@ -140,11 +141,16 @@ package body Extensible_HTTP is
          then
             declare
 
-               Read_Token   : constant Token  := Token (CRLF_Tag & Read_String_From_Stream (Stream, ":"));
-               Read_Content : constant String := Read_String_From_Stream (Stream, CRLF);
+               Read_Token   : constant Token := Token (CRLF_Tag & Read_String_From_Stream (Stream, ":"));
+               Read_Content : String         := Read_String_From_Stream (Stream, CRLF);
 
             begin
-               Item.Fields.Include (Read_Token, Read_Content);
+               if Read_Content (1) = ' ' or else Read_Content (1) = ASCII.HT
+               then
+                  Item.Fields.Include (Read_Token, Read_Content (2 .. Read_Content'Length));
+               else
+                  Item.Fields.Include (Read_Token, Read_Content);
+               end if;
             end;
 
          else
