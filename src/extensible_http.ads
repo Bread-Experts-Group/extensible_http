@@ -117,6 +117,8 @@ package Extensible_HTTP is
         Reason : String_Holders.Holder := String_Holders.Empty_Holder;
      end record;
 
+   function Decode_URL (URL : String) return String;
+
 private
    procedure Write_HTTP_11_Request_Message (Stream : not null access Root_Stream_Type'Class; Item : HTTP_11_Request_Message);
 
