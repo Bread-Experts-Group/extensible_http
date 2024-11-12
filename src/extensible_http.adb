@@ -1,8 +1,8 @@
 with Ada.Strings.Unbounded;
 use Ada.Strings.Unbounded;
 
+with Ada.Strings.Fixed;
 with Ada.Integer_Text_IO;
-with Ada.Text_IO;
 
 package body Extensible_HTTP is
 
@@ -141,16 +141,23 @@ package body Extensible_HTTP is
          then
             declare
 
-               Read_Token   : constant Token := Token (CRLF_Tag & Read_String_From_Stream (Stream, ":"));
-               Read_Content : String         := Read_String_From_Stream (Stream, CRLF);
+               Read_Token   : constant Token        := Token (CRLF_Tag & Read_String_From_Stream (Stream, ":"));
+               Read_Content : String_Holders.Holder := String_Holders.To_Holder (Read_String_From_Stream (Stream, CRLF));
+               First        : Character             := Read_Content.Element (1);
+               Last         : Character             := Read_Content.Element (Read_Content.Element'Length);
 
             begin
-               if Read_Content (1) = ' ' or else Read_Content (1) = ASCII.HT
+               if First = ' ' or else First = ASCII.HT
                then
-                  Item.Fields.Include (Read_Token, Read_Content (2 .. Read_Content'Length));
-               else
-                  Item.Fields.Include (Read_Token, Read_Content);
+                  Read_Content.Replace_Element (Ada.Strings.Fixed.Tail (Read_Content.Element, Read_Content.Element'Length - 1));
                end if;
+
+               if Last = ' ' or else Last = ASCII.HT
+               then
+                  Read_Content.Replace_Element (Ada.Strings.Fixed.Head (Read_Content.Element, Read_Content.Element'Length - 1));
+               end if;
+
+               Item.Fields.Include (Read_Token, Read_Content.Element);
             end;
 
          else
