@@ -14,8 +14,13 @@ project Extensible_Http is
      external ("EXTENSIBLE_HTTP_LIBRARY_TYPE", external ("LIBRARY_TYPE", "static"));
    for Library_Kind use Library_Type;
 
+   package Builder is
+      for Switches ("Ada") use ("-m2", "-d");
+   end Builder;
+
    package Compiler is
-      for Default_Switches ("Ada") use Extensible_Http_Config.Ada_Compiler_Switches & ("-gnatX");
+      for Switches ("Ada") use ("-gnatX", "-gnatyM179");
+      for Default_Switches ("Ada") use Extensible_Http_Config.Ada_Compiler_Switches;
    end Compiler;
 
    package Binder is
