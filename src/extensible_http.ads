@@ -8,6 +8,9 @@ use Ada.Strings.UTF_Encoding;
 with Ada.Streams;
 use Ada.Streams;
 
+with Interfaces;
+use Interfaces;
+
 package Extensible_HTTP is
    --  https://datatracker.ietf.org/doc/html/rfc9110#name-methods, Table 4
    --  * Essential methods must always be available.
@@ -116,6 +119,13 @@ package Extensible_HTTP is
    function Encode_URL (URL : String) return String;
 
    function Decode_URL (URL : String) return String;
+
+   function Extract_Bits (Data : Unsigned_32; From, To : Natural) return Unsigned_32 with
+     Pre => From <= To and To < Data'Size, Post => Extract_Bits'Result < (2**(To - From + 1));
+
+   function Encode_Base64 (Data : String) return String;
+
+   function Decode_Base64 (Data : String) return String;
 
 private
    procedure Write_HTTP_11_Request_Message (Stream : not null access Root_Stream_Type'Class; Item : HTTP_11_Request_Message);
