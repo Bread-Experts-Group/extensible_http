@@ -220,11 +220,19 @@ package body Extensible_HTTP is
 
          begin
             To_Write.Append (Character'Val (Shift_Left (First, 2) or Shift_Right (Second, 4)));
-            To_Write.Append (Character'Val (Shift_Left (Second and 2#1111#, 4) or Shift_Right (Third, 2)));
-            To_Write.Append (Character'Val (Shift_Left (Third and 2#11#, 6) or Fourth));
+
+            if Group_Literal (3) /= '='
+            then
+               To_Write.Append (Character'Val (Shift_Left (Second and 2#1111#, 4) or Shift_Right (Third, 2)));
+
+               if Group_Literal (4) /= '='
+               then
+                  To_Write.Append (Character'Val (Shift_Left (Third and 2#11#, 6) or Fourth));
+               end if;
+            end if;
          end;
          Position := @ + 4;
-         exit when Position > Data'Length;
+         exit when (Position - 4) >= Data'Length;
       end loop;
       Ada.Text_IO.Put_Line (To_Write'Image);
       return To_Write.To_String;
