@@ -109,6 +109,9 @@ package body Extensible_HTTP.HTTP11 is
             end loop;
             Item.Message_Body.Replace_Element (Message_Body.To_String);
          end;
+
+      else
+         Item.Message_Body.Replace_Element ("");
       end if;
    end Read_HTTP_11_Message_Body;
 
