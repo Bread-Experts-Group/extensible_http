@@ -5,7 +5,9 @@ package Extensible_HTTP.HTTP11 is
         Message_Body : UTF_String_Holders.Holder := UTF_String_Holders.Empty_Holder;
      end record;
 
-   procedure Write_HTTP_11_Message_Body (Stream : not null access Root_Stream_Type'Class; Item : HTTP_11_Message);
+   procedure Write_HTTP_11_Message (Stream : not null access Root_Stream_Type'Class; Item : HTTP_11_Message);
+
+   procedure Read_HTTP_11_Message_No_Body (Stream : not null access Root_Stream_Type'Class; Item : out HTTP_11_Message);
 
    procedure Read_HTTP_11_Message_Body (Stream : not null access Root_Stream_Type'Class; Item : out HTTP_11_Message);
 

@@ -5,6 +5,8 @@ use Ada.Strings.Unbounded;
 
 with Extensible_HTTP.URL;
 
+with Ada.Text_IO;
+
 package body Extensible_HTTP.HTTP11 is
 
    use Field_Hashed_Maps;
@@ -22,7 +24,7 @@ package body Extensible_HTTP.HTTP11 is
    -- HTTP/1.1 Message --
    ----------------------
 
-   procedure Write_HTTP_11_Message_Body (Stream : not null access Root_Stream_Type'Class; Item : HTTP_11_Message) is
+   procedure Write_HTTP_11_Message (Stream : not null access Root_Stream_Type'Class; Item : HTTP_11_Message) is
    begin
       String'Write (Stream, CRLF);
 
@@ -37,14 +39,14 @@ package body Extensible_HTTP.HTTP11 is
       then
          String'Write (Stream, Item.Message_Body.Element);
       end if;
-   end Write_HTTP_11_Message_Body;
+   end Write_HTTP_11_Message;
 
       ----------------------
       -- BASE / READ      --
       -- HTTP/1.1 Message --
       ----------------------
 
-   procedure Read_HTTP_11_Message_Body (Stream : not null access Root_Stream_Type'Class; Item : out HTTP_11_Message) is
+   procedure Read_HTTP_11_Message_No_Body (Stream : not null access Root_Stream_Type'Class; Item : out HTTP_11_Message) is
 
       CRLF_Tag : String (1 .. 2);
 
@@ -81,13 +83,33 @@ package body Extensible_HTTP.HTTP11 is
             exit;
          end if;
       end loop;
+   end Read_HTTP_11_Message_No_Body;
 
+   -----------------------
+   -- BASE / READ, Body --
+   -- HTTP/1.1 Message  --
+   -----------------------
+
+   procedure Read_HTTP_11_Message_Body (Stream : not null access Root_Stream_Type'Class; Item : out HTTP_11_Message) is
+   begin
       if Item.Fields.Contains ("Transfer-Encoding")
       then
          raise Program_Error with "TE!!";
 
       elsif Item.Fields.Contains ("Content-Length")
       then
+         if Item.Fields.Contains ("Expect") and Item.Fields.Element ("Expect") (1 .. 3) = "100"
+         then
+            declare
+
+               Continue_Message : HTTP_11_Response_Message;
+
+            begin
+               Continue_Message.Status := 100;
+               HTTP_11_Response_Message'Write (Stream, Continue_Message);
+            end;
+         end if;
+
          declare
 
             Content_Length : Natural := Natural'Value (Item.Fields.Element ("Content-Length"));
@@ -126,7 +148,7 @@ package body Extensible_HTTP.HTTP11 is
 
    begin
       String'Write (Stream, RequestLine);
-      Write_HTTP_11_Message_Body (Stream, Item);
+      Write_HTTP_11_Message (Stream, Item);
    end Write_HTTP_11_Request_Message;
 
       ----------------------
@@ -142,7 +164,7 @@ package body Extensible_HTTP.HTTP11 is
       Item.Method := HTTP_11_Method_Types'Value (Read_String_From_Stream (Stream, " "));
       Item.Target.Replace_Element (Extensible_HTTP.URL.Decode_URL (Read_String_From_Stream (Stream, " ")));
       String'Read (Stream, discard);
-      Read_HTTP_11_Message_Body (Stream, Item);
+      Read_HTTP_11_Message_No_Body (Stream, Item);
    end Read_HTTP_11_Request_Message;
 
       ----------------------
@@ -161,7 +183,7 @@ package body Extensible_HTTP.HTTP11 is
       then
          String'Write (Stream, Item.Reason.Element);
       end if;
-      Write_HTTP_11_Message_Body (Stream, Item);
+      Write_HTTP_11_Message (Stream, Item);
    end Write_HTTP_11_Response_Message;
 
    ----------------------
