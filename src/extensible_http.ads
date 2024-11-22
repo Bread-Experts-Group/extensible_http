@@ -14,18 +14,6 @@ use Interfaces;
 package Extensible_HTTP is
    CRLF : constant String := ASCII.CR & ASCII.LF;
 
-     --  https://datatracker.ietf.org/doc/html/rfc9110#name-methods, Table 4 * Essential methods must always be available. * Non-essential methods can be disabled.
-     --   - Methods that are disabled/unimplemented must:
-     --    - Reply with a 501.
-     --    - If they are disallowed, reply with a 405.
-     --  * Safe methods only do "read-only" operations on the server.
-     --   - https://datatracker.ietf.org/doc/html/rfc9110#name-safe-methods
-     --  * Idempotent methods will have the same effect across identical requests.
-     --   - Safe methods are idempotent.
-     --   - https://datatracker.ietf.org/doc/html/rfc9110#name-idempotent-methods
-     --  @value GET Safe, essential @value HEAD Safe, essential @value POST Unsafe, non-idempotent, non-essential @value PUT Unsafe, idempotent, non-essential @value DELETE Unsafe,
-     --  idempotent, non-essential @value CONNECT Unsafe, non-idempotent, non-essential @value OPTIONS Safe, non-essential @value TRACE Safe, non-essential
-
    type HTTP_11_Method_Types is
      (GET,
       HEAD,
